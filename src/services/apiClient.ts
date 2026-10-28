@@ -1,3 +1,7 @@
+/**
+ * Resolves the base REST API URL dynamically based on NEXT_PUBLIC_API_URL
+ * or the current browser hostname (fallback to port 5076).
+ */
 const getApiBaseUrl = () => {
   if (process.env.NEXT_PUBLIC_API_URL) {
     return process.env.NEXT_PUBLIC_API_URL;
@@ -10,6 +14,9 @@ const getApiBaseUrl = () => {
   return "http://localhost:5076/api/v1";
 };
 
+/**
+ * Custom error wrapper representing HTTP errors returned by the .NET Backend API.
+ */
 export class ApiError extends Error {
   status: number;
   details?: unknown;
@@ -22,6 +29,11 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Centralized HTTP client wrapper around Fetch API.
+ * Automatically injects the JWT Bearer token from localStorage or sessionStorage,
+ * handles binary PDF responses, and clears expired sessions on HTTP 401.
+ */
 export async function request<T>(
   endpoint: string,
   options: RequestInit = {}
@@ -51,7 +63,7 @@ export async function request<T>(
     headers,
   });
 
-  // Binary response (PDF download)
+  // Binary response (PDF attendance certificate download)
   if (response.headers.get("content-type")?.includes("application/pdf")) {
     if (!response.ok) {
       throw new ApiError("Error al generar el certificado PDF.", response.status);

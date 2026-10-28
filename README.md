@@ -1,127 +1,127 @@
-# SkillHub — Plataforma de Gestion de Talleres e Inscripciones (Frontend Web)
+# SkillHub — Workshop and Enrollment Management Platform (Frontend Web)
 
-Este repositorio contiene la aplicacion web Frontend de **SkillHub**, construida con **Next.js 16 (App Router)**, **React 19**, **TypeScript** y **Tailwind CSS v4**, organizada bajo una estructura modular de **Clean Architecture** en el cliente. La interfaz se comunica de forma desacoplada con la API REST en `.NET 10` para gestionar el catalogo de talleres, el directorio de instructores, las inscripciones de participantes, la emision de constancias en PDF y la suite de administracion e importacion masiva en Excel.
+This repository contains the Frontend web application for **SkillHub**, built with **Next.js 16 (App Router)**, **React 19**, **TypeScript**, and **Tailwind CSS v4**, structured under a modular client-side **Clean Architecture**. The application communicates with the decoupled `.NET 10` REST API to manage the workshop catalog, instructor directory, participant enrollments, PDF attendance certificate generation, and the instructor administration and Excel batch import suite.
 
-Repositorio del Backend (.NET 10 + PostgreSQL): [https://github.com/Facz21/SkillHub-Backend](https://github.com/Facz21/SkillHub-Backend)
+Backend Repository (.NET 10 + PostgreSQL): [https://github.com/Facz21/SkillHub-Backend](https://github.com/Facz21/SkillHub-Backend)
 
 ---
 
-## Arquitectura del Proyecto Frontend
+## Frontend Project Architecture
 
-El codigo fuente dentro de `src/` esta estructurado por capas para separar los modelos de dominio, los casos de uso, los adaptadores de red y los componentes de interfaz de usuario:
+The source code inside `src/` is organized into four distinct layers to separate domain models, use cases, network adapters, and user interface components:
 
 ```text
 src/
 ├── domain/
-│   ├── entities/          # Entidades e interfaces de dominio (Workshop, Enrollment, UserProfile, TopWorkshopReport)
-│   └── repositories/      # Contratos de acceso a datos (IWorkshopRepository, IEnrollmentRepository, IAuthRepository)
+│   ├── entities/          # Domain entities and interfaces (Workshop, Enrollment, UserProfile, TopWorkshopReport)
+│   └── repositories/      # Data access contracts (IWorkshopRepository, IEnrollmentRepository, IAuthRepository)
 ├── application/
-│   └── use-cases/         # Casos de uso del cliente (ManageWorkshopsUseCase, ManageEnrollmentsUseCase)
+│   └── use-cases/         # Client-side use cases (ManageWorkshopsUseCase, ManageEnrollmentsUseCase)
 ├── infrastructure/
-│   ├── http/              # Cliente HTTP centralizado (httpClient) con inyeccion automatica de JWT Bearer
-│   └── repositories/      # Implementaciones REST conectadas a /api/v1/* (ApiWorkshopRepository, ApiEnrollmentRepository)
+│   ├── http/              # Centralized HTTP client (httpClient) with automatic JWT Bearer token injection
+│   └── repositories/      # REST implementations connected to /api/v1/* (ApiWorkshopRepository, ApiEnrollmentRepository)
 ├── presentation/
-│   ├── context/           # Estado global de sesion (AuthContext) con soporte dual localStorage / sessionStorage
+│   ├── context/           # Global session state (AuthContext) with dual localStorage / sessionStorage persistence
 │   └── components/
-│       ├── layout/        # Navegacion adaptativa por rol (Header, Footer, AuthModal, ConfirmDialog)
-│       └── features/      # Vistas y modulos interactivos (WorkshopsSection, MyEnrollmentsSection, InstructorSuite, CertificateModal, DiplomaMockup)
-└── app/                   # Rutas de Next.js App Router (/, /explorar, /mentores, /mis-inscripciones, /certificados, /instructor, /perfil, /restablecer-clave, /confirmar-correo)
+│       ├── layout/        # Role-adaptive navigation and dialogs (Header, Footer, AuthModal, ConfirmDialog)
+│       └── features/      # Interactive views and feature modules (WorkshopsSection, MyEnrollmentsSection, InstructorSuite, CertificateModal, DiplomaMockup)
+└── app/                   # Next.js App Router pages (/, /explorar, /mentores, /mis-inscripciones, /certificados, /instructor, /perfil, /restablecer-clave, /confirmar-correo)
 ```
 
 ---
 
-## Stack Tecnologico
+## Technology Stack
 
-- **Framework Web:** Next.js 16.2.3 (App Router) + React 19.2.4
-- **Lenguaje y Tipado:** TypeScript 5 (modo estricto habilitado)
-- **Estilos y Sistema de Diseno:** Tailwind CSS v4 con variables de tema semanticas y diseno adaptable (Mobile, Tablet y Desktop)
-- **Iconografia:** `lucide-react`
-- **Autenticacion en Cliente:** Gestion de tokens JWT Bearer con persistencia condicional:
-  - `localStorage` cuando el usuario activa la opcion "Recordar sesion por 7 dias".
-  - `sessionStorage` para sesiones efimeras que se cierran al cerrar la ventana del navegador.
-- **Contenerizacion:** `Dockerfile` multi-stage basado en `node:22-alpine` y `docker-compose.yml` listo para produccion en el puerto `3000`.
-
----
-
-## Modulos y Rutas de la Aplicacion
-
-### 1. Inicio (`/`)
-- Presentacion general del ecosistema educativo de SkillHub.
-- Indicadores en tiempo real de talleres programados, cupos disponibles y categorias activas.
-- Vista previa interactiva del modelo de constancia oficial (`DiplomaMockup`).
-- Accesos rapidos contextualizados segun el rol del usuario autenticado (`Participant` o `Employee`).
-
-### 2. Catalogo de Talleres (`/explorar`)
-- Listado completo de talleres futuros con calculo en vivo de cupos disponibles y barra de ocupacion.
-- Buscador instantaneo por nombre de taller, instructor o salon, y filtros rapidos por especialidad (Fotografia, Cocina, Oratoria, Musica, Diseno grafico, Marketing digital).
-- Inscripcion directa con un clic para participantes autenticados, validando reglas de cupo, no duplicidad y no cruce de horarios.
-
-### 3. Directorio de Mentores (`/mentores`)
-- Tarjetas de perfil de todos los instructores registrados en la plataforma junto con su especialidad y correo institucional.
-- Contador y desglose de talleres activos dictados por cada instructor con enlace directo de inscripcion.
-
-### 4. Mis Inscripciones (`/mis-inscripciones`) — Exclusivo para Participantes
-- Panel de control de inscripciones activas e historial de inscripciones canceladas.
-- Validacion visual y funcional de la regla de negocio de cancelacion (habilitada unicamente hasta 24 horas antes del inicio del taller).
-- Boton de re-inscripcion directa para talleres previamente cancelados que aun cuenten con cupos disponibles.
-- Acceso directo a la vista previa y descarga de la constancia de asistencia en formato PDF.
-
-### 5. Explorador de Constancias PDF (`/certificados`)
-- **Vista de Participante:** Diseno Master-Detail sin barras de desplazamiento horizontales forzadas. Permite seleccionar cualquiera de los talleres inscritos en una lista vertical o navegar con controles `Anterior / Siguiente` para previsualizar el diploma oficial en vivo y descargar el archivo PDF generado por el Backend (`QuestPDF`).
-- **Vista de Instructor (`Employee`):** Permite seleccionar cualquiera de los talleres del centro educativo, consultar la lista de participantes inscritos, filtrar por nombre o documento, previsualizar el diploma individual de cada estudiante y descargar su certificado PDF oficial.
-
-### 6. Suite de Instructor y Administracion (`/instructor`) — Exclusivo para Empleados
-- **Creacion de Talleres:** Formulario validado para publicar nuevos talleres asignando instructor titular desde el catalogo real de docentes, categoria, fecha y hora de inicio, duracion en minutos, salon y cupo maximo.
-- **Gestion de Talleres e Integrantes:** Tabla con buscador en tiempo real, filtro rapido (`Todos los cursos` / `Mis cursos asignados`), controles de desplazamiento lateral y columna de acciones fija (`sticky`).
-- **Nomina y Reportes por Curso:** Modal detallado de integrantes inscritos por taller con:
-  - Exportacion inmediata de reporte en formato `.csv` (codificado en UTF-8 con BOM, compatible directamente con Microsoft Excel).
-  - Impresion de planilla fisica de asistencia.
-  - Descarga directa del certificado PDF de cada estudiante activo.
-  - Cancelacion administrativa de inscripciones sin la restriccion de 24 horas.
-- **Importacion Masiva desde Excel (`.xlsx`):** Cargador de hojas de calculo conectado a `POST /api/v1/enrollments/import` que muestra el resumen de inscripciones procesadas con exito y la tabla detallada de filas rechazadas con su motivo exacto.
-- **Reporte de Demanda:** Ranking en vivo de los talleres con mayor numero de inscripciones activas (`GET /api/v1/reports/top-workshops`).
-
-### 7. Seguridad, Perfil e Identidad (`/perfil`, `/restablecer-clave`, `/confirmar-correo`)
-- **Modal de Autenticacion (`AuthModal`):**
-  - Inicio de sesion con boton para mostrar/ocultar contrasena, casilla "Recordar sesion por 7 dias" y accesos rapidos de demostracion para pruebas.
-  - Registro de nuevos participantes con validacion de campos y envio automatico de correo de verificacion.
-  - Solicitud de recuperacion de contrasena mediante correo electronico.
-- **Restablecimiento de Contrasena (`/restablecer-clave`):** Captura automatica de los parametros `email` y `token` enviados al correo del usuario para definir una nueva contrasena segura.
-- **Confirmacion de Correo (`/confirmar-correo`):** Verificacion automatica del token de activacion de cuenta al abrir el enlace recibido por correo electronico.
-- **Perfil de Usuario (`/perfil`):** Visualizacion de datos personales, estado de verificacion de correo electronico (con opcion de reenvio de enlace de confirmacion) y resumen de actividad.
+- **Web Framework:** Next.js 16.2.3 (App Router) + React 19.2.4
+- **Language and Typing:** TypeScript 5 (strict mode enabled)
+- **Styling and Design System:** Tailwind CSS v4 with semantic theme variables and responsive layouts (Mobile, Tablet, and Desktop)
+- **Iconography:** `lucide-react`
+- **Client Authentication:** JWT Bearer token state management with conditional storage:
+  - `localStorage` when the user enables the "Remember session for 7 days" option.
+  - `sessionStorage` for ephemeral sessions that clear automatically when the browser window is closed.
+- **Containerization:** Multi-stage `Dockerfile` based on `node:22-alpine` and `docker-compose.yml` configured for production on port `3000`.
 
 ---
 
-## Guia de Despliegue y Ejecucion
+## Application Modules and Routes
 
-### Opcion A: Ejecucion con Docker Compose (Recomendado)
+### 1. Home (`/`)
+- Executive overview of the SkillHub educational ecosystem.
+- Real-time metrics displaying scheduled workshops, available seats, and active specialties.
+- Interactive live preview of the official attendance diploma (`DiplomaMockup`).
+- Role-aware quick actions tailored to the authenticated user (`Participant` or `Employee`).
 
-1. Clonar el repositorio:
+### 2. Workshop Catalog (`/explorar`)
+- Complete directory of upcoming workshops with live calculation of available seats and occupancy progress bars.
+- Instant search by workshop title, code, or instructor, alongside specialty filter pills (Photography, Culinary Arts, Public Speaking, Music, Graphic Design, Digital Marketing).
+- One-click enrollment for authenticated participants, enforcing seat capacity, duplicate prevention, and schedule overlap rules.
+
+### 3. Instructor Directory (`/mentores`)
+- Profile cards for all registered instructors displaying their specialty and institutional email.
+- Active workshop count and expandable course schedule for each instructor with direct enrollment actions.
+
+### 4. My Enrollments (`/mis-inscripciones`) — Participant Exclusive
+- Control panel displaying active enrollments and cancelled enrollment history.
+- Visual and functional enforcement of the 24-hour cancellation deadline rule for participants.
+- Direct re-enrollment action for previously cancelled workshops that still have available seats.
+- Instant access to preview and download the official PDF attendance certificate.
+
+### 5. PDF Certificate Explorer (`/certificados`)
+- **Participant View:** Master-Detail layout without awkward horizontal scrollbars. Allows selecting any enrolled workshop from a vertical list or stepping through courses with `Previous / Next` controls to preview the official diploma in real time and download the PDF generated by the Backend (`QuestPDF`).
+- **Instructor View (`Employee`):** Enables selecting any workshop across the institution, inspecting the roster of enrolled participants, filtering by student name or code, previewing individual student diplomas, and downloading official PDF certificates.
+
+### 6. Instructor and Administration Suite (`/instructor`) — Employee Exclusive
+- **Workshop Creation:** Validated form to publish new workshops by selecting an assigned instructor from the live faculty directory, defining unique code, title, start/end dates, capacity, and description.
+- **Workshop and Roster Management:** Interactive table with real-time search, quick filter tabs (`All Workshops` / `My Assigned Workshops`), horizontal scroll controls, and a `sticky` right-aligned action column.
+- **Course Roster and Export Modal:** Detailed modal listing all enrolled participants for a selected workshop, featuring:
+  - Instant `.csv` report export (UTF-8 with BOM encoding, directly compatible with Microsoft Excel).
+  - Printable attendance sheet view.
+  - Direct PDF certificate download for each active participant.
+  - Administrative enrollment cancellation without the 24-hour time restriction.
+- **Resilient Excel Batch Import (`.xlsx`):** Spreadsheet uploader connected to `POST /api/v1/enrollments/import` displaying processed row counts, successful enrollments, and a detailed diagnostic table of rejected rows with exact reasons.
+- **Demand Analytics Report:** Live ranking of the most requested workshops ordered by active enrollments (`GET /api/v1/reports/top-workshops`).
+
+### 7. Security, Profile, and Identity (`/perfil`, `/restablecer-clave`, `/confirmar-correo`)
+- **Authentication Modal (`AuthModal`):**
+  - Sign-in form with show/hide password toggle, "Remember session for 7 days" checkbox, and one-click demo credential buttons.
+  - Participant registration form with automatic email verification dispatch.
+  - Password recovery request form via SMTP email.
+- **Password Reset (`/restablecer-clave`):** Automatically reads `email` and `token` query parameters from the recovery email link to set a new password.
+- **Email Confirmation (`/confirmar-correo`):** Automatically validates the cryptographic verification token when opening the confirmation link sent upon registration.
+- **User Profile (`/perfil`):** Displays personal account details, email verification badge (with one-click resend verification link), and role status.
+
+---
+
+## Deployment and Execution Guide
+
+### Option A: Execution with Docker Compose (Recommended)
+
+1. Clone the repository:
    ```bash
    git clone https://github.com/Facz21/SkillHub-Frontend.git
    cd SkillHub-Frontend
    ```
-2. Construir y levantar el contenedor en el puerto `3000`:
+2. Build and start the container on port `3000`:
    ```bash
    docker compose up -d --build
    ```
-3. Abrir `http://localhost:3000` en el navegador (asegurandose de que el Backend este corriendo en `http://localhost:5076`).
+3. Open `http://localhost:3000` in your browser (ensuring the Backend API is running at `http://localhost:5076`).
 
-### Opcion B: Ejecucion Local con Node.js
+### Option B: Local Execution with Node.js
 
-1. Instalar dependencias:
+1. Install dependencies:
    ```bash
    npm install
    ```
-2. Configurar variables de entorno (opcional, por defecto apunta a `http://localhost:5076/api/v1`):
+2. Configure environment variables (optional, defaults to `http://localhost:5076/api/v1`):
    ```bash
    cp .env.example .env.local
    ```
-3. Iniciar servidor de desarrollo:
+3. Start the development server:
    ```bash
    npm run dev
    ```
-4. Para compilar y ejecutar en modo produccion:
+4. To build and run for production:
    ```bash
    npm run build
    npm run start
@@ -129,6 +129,6 @@ src/
 
 ---
 
-## Autor
+## Author
 
 Andrés Felipe Cortés Zambrano
